@@ -18,7 +18,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "knex": "knex --knexfile knexfile.ts",
-    "migrate": "pnpm run knex migrate:latest",
+    "migrate:latest": "pnpm run knex migrate:latest",
+    "migrate:down": "pnpm run knex migrate:rollback",
     "migrate:make": "pnpm run knex migrate:make -x ts",
     "seed": "pnpm run knex seed:run",
     "seed:make": "pnpm run knex seed:make -x ts"
@@ -34,6 +35,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/terminus": "^10.2.3",
     "@types/node": "^20.3.1",
+    "dotenv": "^16.4.5",
     "graphql": "^16.9.0",
     "knex": "^3.1.0",
     "mysql2": "^3.11.0",

@@ -38,6 +38,9 @@ importers:
       '@types/node':
         specifier: ^20.3.1
         version: 20.14.13
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       graphql:
         specifier: ^16.9.0
         version: 16.9.0

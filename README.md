@@ -17,42 +17,42 @@ $ pnpm install
 docker-compose up -d
 
 # development
-$ pnpm run dev
+$ pnpm dev
 
 # production mode
-$ pnpm run build
-$ pnpm run start:prod
+$ pnpm build
+$ pnpm start:prod
 ```
 
 ## Test
 
 ```bash
 # unit tests
-$ pnpm run test
+$ pnpm test
 
 # e2e tests
-$ pnpm run test:e2e
+$ pnpm test:e2e
 
 # test coverage
-$ pnpm run test:cov
+$ pnpm test:cov
 ```
 
 ## DB Migration
 
 ```bash
 # create migrate file
-pnpm run migrate:make {file_name}
+pnpm migrate:make {file_name}
 
 # migrate all
-pnpm run migrate
+pnpm migrate:latest
 ```
 
 ## Seed data
 
 ```bash
 # create seed file
-pnpm run seed:make {file_name}
+pnpm seed:make {file_name}
 
 # seed all data
-pnpm run seed
+pnpm seed
 ```
