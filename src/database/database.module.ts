@@ -2,8 +2,9 @@ import { Global, Module } from '@nestjs/common';
 import { knexSnakeCaseMappers, Model } from 'objection';
 import * as Knex from 'knex';
 import { Test } from './models/test.model';
+import { User } from './models/user.model';
 
-const models = [Test];
+const models = [Test, User];
 
 const modelProviders = models.map((model) => {
   return {

@@ -8,8 +8,6 @@ export async function up(knex: Knex) {
     t.increments().primary();
     t.string('name', 100).notNullable();
     t.string('logo_path', 500).notNullable();
-    t.text('describe').notNullable();
-    t.integer('employee_num').notNullable();
     t.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
     t.timestamp('updated_at')
       .notNullable()

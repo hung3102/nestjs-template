@@ -7,6 +7,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HealthController } from './health/health.controller';
 import { AppLoggerMiddleware } from './middleware/appLogger.middleware';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { AppLoggerMiddleware } from './middleware/appLogger.middleware';
     }),
     DatabaseModule,
     TestModule,
+    AuthModule,
+    UserModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
