@@ -24,6 +24,8 @@ $ pnpm build
 $ pnpm start:prod
 ```
 
+- Playground: http://localhost:3000/graphql
+
 ## Test
 
 ```bash
