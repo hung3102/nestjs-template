@@ -9,6 +9,7 @@ import { HealthController } from './health/health.controller';
 import { AppLoggerMiddleware } from './middleware/appLogger.middleware';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -18,9 +19,10 @@ import { UserModule } from './users/user.module';
       playground:
         process.env.APP_ENV === 'local' || process.env.APP_ENV === 'staging', // TODOH: test in production
     }),
-    DatabaseModule,
-    TestModule,
     AuthModule,
+    DatabaseModule,
+    EmailModule,
+    TestModule,
     UserModule,
   ],
   controllers: [AppController, HealthController],
