@@ -1,7 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ModelClass } from 'objection';
-import { User } from 'src/database/models/user.model';
-import { CreateUserDto } from './dto/create-user.dto';
+import { User, UserStatus } from 'src/database/models/user.model';
+
+type CreateUserParam = {
+  email: string;
+  password: string;
+  confirmToken: string;
+  confirmTokenCreatedAt: Date;
+  status: UserStatus;
+};
 
 @Injectable()
 export class UserService {
@@ -15,7 +22,7 @@ export class UserService {
     return await this.userModel.query().findOne({ email });
   }
 
-  async create(user: CreateUserDto): Promise<User> {
-    return await this.userModel.query().insert(user);
+  async create(user: CreateUserParam): Promise<User> {
+    return await this.userModel.query().insertAndFetch(user);
   }
 }

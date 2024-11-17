@@ -5,6 +5,7 @@ import {
   SendEmailCommandInput,
   SendEmailCommandOutput,
 } from '@aws-sdk/client-sesv2';
+import { User } from 'src/database/models/user.model';
 
 export type SendEmailParam = {
   toAddress: string;
@@ -57,5 +58,17 @@ export class EmailService {
     const command = new SendEmailCommand(input);
     const response: SendEmailCommandOutput = await this.sesClient.send(command);
     return response;
+  }
+
+  async sendConfirmEmail(user: User): Promise<void> {
+    const confirmationUrl = `${process.env.API_URL}/confirm?token=${user.confirmToken}`;
+    const subject = 'Email Confirmation';
+    const bodyText = `Please confirm your email by visiting: ${confirmationUrl}`;
+
+    await this.sendEmail({
+      toAddress: user.email,
+      subject,
+      bodyText,
+    });
   }
 }

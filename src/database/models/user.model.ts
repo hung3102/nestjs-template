@@ -10,5 +10,20 @@ export class User extends BaseModel {
   email: string;
 
   password: string;
+
+  @Field(() => String)
   refreshToken: string | null;
+
+  @Field(() => String)
+  confirmToken: string;
+
+  confirmTokenCreatedAt: Date;
+
+  @Field(() => String)
+  status: UserStatus;
+}
+
+export enum UserStatus {
+  INACTIVE = 'INACTIVE',
+  ACTIVE = 'ACTIVE',
 }

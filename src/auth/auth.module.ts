@@ -6,6 +6,7 @@ import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { UserModule } from 'src/users/user.module';
 import { UserService } from 'src/users/user.service';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [JwtModule.register({}), UserModule],
@@ -13,6 +14,7 @@ import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
     AuthResolver,
     AuthService,
     UserService,
+    EmailService,
     AccessTokenStrategy,
     RefreshTokenStrategy,
   ],

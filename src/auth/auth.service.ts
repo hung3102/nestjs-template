@@ -5,35 +5,47 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AccessTokenExpireTime, RefreshTokenExpireTime } from 'src/const';
 import { AuthDto } from './dto/auth.dto';
 import { AuthToken } from 'src/database/models/authToken.model';
 import { UserService } from 'src/users/user.service';
+import { v4 } from 'uuid';
+import { SignupParam } from 'src/users/dto/create-user.dto';
+import { EmailService } from 'src/email/email.service';
+import { UserStatus } from 'src/database/models/user.model';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UserService,
     private jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto): Promise<AuthToken> {
+  async signUp(param: SignupParam): Promise<AuthToken> {
     // Check if user exists
-    const userExists = await this.usersService.findByEmail(createUserDto.email);
+    const userExists = await this.usersService.findByEmail(param.email);
     if (userExists) {
       throw new BadRequestException('User already exists');
     }
 
     // Hash password
-    const hash = await this.hashData(createUserDto.password);
+    const hash = await this.hashData(param.password);
+
+    // Create emailConfirmToken
+    const emailConfirmToken = await this.hashData(v4());
+
     const newUser = await this.usersService.create({
-      ...createUserDto,
+      email: param.email,
       password: hash,
+      confirmToken: emailConfirmToken,
+      confirmTokenCreatedAt: new Date(),
+      status: UserStatus.INACTIVE,
     });
 
     const tokens = await this.getTokens(newUser.id, newUser.email);
     await this.updateRefreshToken(newUser.id, tokens.refreshToken);
+    await this.emailService.sendConfirmEmail(newUser);
 
     return tokens;
   }
