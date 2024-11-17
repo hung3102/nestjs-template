@@ -5,26 +5,35 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { AccessTokenExpireTime, RefreshTokenExpireTime } from 'src/const';
+import {
+  AccessTokenExpireTime,
+  EmailConfirmTokenExpireDay,
+  RefreshTokenExpireTime,
+} from 'src/const';
 import { AuthDto } from './dto/auth.dto';
 import { AuthToken } from 'src/database/models/authToken.model';
-import { UserService } from 'src/users/user.service';
+import { UserService } from 'src/user/user.service';
 import { v4 } from 'uuid';
-import { SignupParam } from 'src/users/dto/create-user.dto';
+import { SignupParam } from 'src/user/dto/create-user.dto';
 import { EmailService } from 'src/email/email.service';
-import { UserStatus } from 'src/database/models/user.model';
+import { User, UserStatus } from 'src/database/models/user.model';
+import { Transaction } from 'objection';
+import { UserAuth } from 'src/database/models/userAuth.model';
+import { UserAuthService } from 'src/userAuth/userAuth.service';
+import { addDays } from 'date-fns';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UserService,
+    private userService: UserService,
+    private userAuthService: UserAuthService,
     private jwtService: JwtService,
     private readonly emailService: EmailService,
   ) {}
 
   async signUp(param: SignupParam): Promise<AuthToken> {
     // Check if user exists
-    const userExists = await this.usersService.findByEmail(param.email);
+    const userExists = await this.userService.findByEmail(param.email);
     if (userExists) {
       throw new BadRequestException('User already exists');
     }
@@ -33,26 +42,40 @@ export class AuthService {
     const hash = await this.hashData(param.password);
 
     // Create emailConfirmToken
-    const emailConfirmToken = await this.hashData(v4());
+    const emailConfirmToken = btoa(v4());
 
-    const newUser = await this.usersService.create({
-      email: param.email,
-      password: hash,
-      confirmToken: emailConfirmToken,
-      confirmTokenCreatedAt: new Date(),
-      status: UserStatus.INACTIVE,
-    });
+    let user: User, userAuth: UserAuth, tokens: AuthToken;
+    const trx = await User.startTransaction();
 
-    const tokens = await this.getTokens(newUser.id, newUser.email);
-    await this.updateRefreshToken(newUser.id, tokens.refreshToken);
-    await this.emailService.sendConfirmEmail(newUser);
+    try {
+      user = await this.userService.create(trx, {
+        email: param.email,
+        password: hash,
+        status: UserStatus.INACTIVE,
+      });
+
+      userAuth = await this.userAuthService.create(trx, {
+        confirmToken: emailConfirmToken,
+        confirmTokenCreatedAt: new Date(),
+        userId: user.id,
+      });
+
+      tokens = await this.getTokens(user.id, user.email);
+      await this.updateRefreshToken(trx, user.id, tokens.refreshToken);
+      await trx.commit();
+    } catch (err) {
+      await trx.rollback();
+      throw err;
+    }
+
+    await this.emailService.sendConfirmEmail(user.email, userAuth.confirmToken);
 
     return tokens;
   }
 
   async signIn(data: AuthDto): Promise<AuthToken> {
     // Check if user exists
-    const user = await this.usersService.findByEmail(data.email);
+    const user = await this.userService.findByEmail(data.email);
 
     if (!user) {
       throw new BadRequestException('User does not exist');
@@ -65,18 +88,50 @@ export class AuthService {
     }
 
     const tokens = await this.getTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.updateRefreshToken(null, user.id, tokens.refreshToken);
 
     return tokens;
   }
 
   async logout(userId: number): Promise<void> {
-    const user = await this.usersService.findById(userId);
+    const user = await this.userService.findById(null, userId);
     await user.$query().update({ refreshToken: null });
   }
 
+  async confirmEmail(token: string): Promise<boolean> {
+    console.log({ token });
+    const now = new Date();
+
+    const userAuth = await this.userAuthService.findByConfirmToken(token);
+    if (!userAuth) {
+      console.log('Token is not valid: Not found UserAuth');
+      return false;
+    }
+
+    const user = await this.userService.findById(null, userAuth.userId);
+    if (!user) {
+      console.log('Token is not valid: Not found user');
+      return false;
+    }
+
+    // Return if user is already confirmed
+    if (user.status == UserStatus.ACTIVE) {
+      return true;
+    }
+
+    if (
+      addDays(userAuth.confirmTokenCreatedAt, EmailConfirmTokenExpireDay) < now
+    ) {
+      console.log('Token is not valid: Token is expired');
+      return false;
+    }
+
+    await user.$query().patch({ status: UserStatus.ACTIVE });
+    return true;
+  }
+
   async refreshTokens(userId: number, refreshToken: string) {
-    const user = await this.usersService.findById(userId);
+    const user = await this.userService.findById(null, userId);
     if (!user || !user.refreshToken) {
       throw new ForbiddenException('Access Denied');
     }
@@ -91,7 +146,7 @@ export class AuthService {
     }
 
     const tokens = await this.getTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.updateRefreshToken(null, user.id, tokens.refreshToken);
     return tokens;
   }
 
@@ -99,11 +154,15 @@ export class AuthService {
     return argon2.hash(data);
   }
 
-  async updateRefreshToken(userId: number, refreshToken: string) {
+  async updateRefreshToken(
+    trx: Transaction,
+    userId: number,
+    refreshToken: string,
+  ) {
     const hashedRefreshToken = await this.hashData(refreshToken);
 
-    const user = await this.usersService.findById(userId);
-    await user.$query().update({ refreshToken: hashedRefreshToken });
+    const user = await this.userService.findById(trx, userId);
+    await user.$query(trx).update({ refreshToken: hashedRefreshToken });
   }
 
   async getTokens(userId: number, email: string): Promise<AuthToken> {

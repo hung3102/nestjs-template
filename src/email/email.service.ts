@@ -5,7 +5,6 @@ import {
   SendEmailCommandInput,
   SendEmailCommandOutput,
 } from '@aws-sdk/client-sesv2';
-import { User } from 'src/database/models/user.model';
 
 export type SendEmailParam = {
   toAddress: string;
@@ -51,7 +50,7 @@ export class EmailService {
     }
 
     if (process.env.APP_ENV == 'local') {
-      console.log(input);
+      console.log(JSON.stringify(input));
       return;
     }
 
@@ -60,13 +59,13 @@ export class EmailService {
     return response;
   }
 
-  async sendConfirmEmail(user: User): Promise<void> {
-    const confirmationUrl = `${process.env.API_URL}/confirm?token=${user.confirmToken}`;
+  async sendConfirmEmail(email: string, token: string): Promise<void> {
+    const confirmationUrl = `${process.env.API_URL}/auth/confirm?token=${token}`;
     const subject = 'Email Confirmation';
     const bodyText = `Please confirm your email by visiting: ${confirmationUrl}`;
 
     await this.sendEmail({
-      toAddress: user.email,
+      toAddress: email,
       subject,
       bodyText,
     });

@@ -12,6 +12,6 @@ export class UserResolver {
   @Query(() => User)
   @UseGuards(LoginGuard)
   async getUser(@CurrentUser() user: JWTUser): Promise<User> {
-    return await this.userService.findById(user.id);
+    return await this.userService.findById(null, user.id);
   }
 }

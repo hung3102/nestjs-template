@@ -6,7 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { CurrentUser, JWTUser } from './currentUser';
 import { LoginGuard } from './guards/login.guard';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
-import { SignupParam } from 'src/users/dto/create-user.dto';
+import { SignupParam } from 'src/user/dto/create-user.dto';
 
 @Resolver()
 export class AuthResolver {
