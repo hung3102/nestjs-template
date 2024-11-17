@@ -21,6 +21,7 @@ import { Transaction } from 'objection';
 import { UserAuth } from 'src/database/models/userAuth.model';
 import { UserAuthService } from 'src/userAuth/userAuth.service';
 import { addDays } from 'date-fns';
+import { JWTUser } from './currentUser';
 
 @Injectable()
 export class AuthService {
@@ -127,6 +128,21 @@ export class AuthService {
     }
 
     await user.$query().patch({ status: UserStatus.ACTIVE });
+    return true;
+  }
+
+  async resendConfirmEmail(jwtUser: JWTUser): Promise<boolean> {
+    // Create emailConfirmToken
+    const emailConfirmToken = btoa(v4());
+
+    await this.userAuthService.create(null, {
+      confirmToken: emailConfirmToken,
+      confirmTokenCreatedAt: new Date(),
+      userId: jwtUser.id,
+    });
+
+    await this.emailService.sendConfirmEmail(jwtUser.email, emailConfirmToken);
+
     return true;
   }
 

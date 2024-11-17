@@ -12,7 +12,7 @@ type CreateUserParam = {
 export class UserService {
   constructor(@Inject('User') private userModel: ModelClass<User>) {}
 
-  async findById(trx: Transaction, id: number): Promise<User> {
+  async findById(trx: Transaction, id: number): Promise<User | null> {
     return await this.userModel.query(trx).findById(id);
   }
 
