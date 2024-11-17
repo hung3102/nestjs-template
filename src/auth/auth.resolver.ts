@@ -19,6 +19,12 @@ export class AuthResolver {
     return await this.authService.signUp(createUserDto);
   }
 
+  @Query(() => Boolean)
+  @UseGuards(LoginGuard)
+  async resendConfirmEmail(@CurrentUser() user: JWTUser): Promise<boolean> {
+    return await this.authService.resendConfirmEmail(user);
+  }
+
   @Query(() => AuthToken)
   async signin(
     @Args('data', { type: () => AuthDto }) authDto: AuthDto,
