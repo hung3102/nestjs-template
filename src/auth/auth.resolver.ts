@@ -1,12 +1,12 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AuthToken } from 'src/database/models/authToken.model';
 import { AuthDto } from './dto/auth.dto';
 import { UseGuards } from '@nestjs/common';
 import { CurrentUser, JWTUser } from './currentUser';
 import { LoginGuard } from './guards/login.guard';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
+import { SignupParam } from 'src/user/dto/create-user.dto';
 
 @Resolver()
 export class AuthResolver {
@@ -14,7 +14,7 @@ export class AuthResolver {
 
   @Query(() => AuthToken)
   async signup(
-    @Args('data', { type: () => CreateUserDto }) createUserDto: CreateUserDto,
+    @Args('data', { type: () => SignupParam }) createUserDto: SignupParam,
   ): Promise<AuthToken> {
     return await this.authService.signUp(createUserDto);
   }

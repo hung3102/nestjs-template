@@ -50,12 +50,24 @@ export class EmailService {
     }
 
     if (process.env.APP_ENV == 'local') {
-      console.log(input);
+      console.log(JSON.stringify(input));
       return;
     }
 
     const command = new SendEmailCommand(input);
     const response: SendEmailCommandOutput = await this.sesClient.send(command);
     return response;
+  }
+
+  async sendConfirmEmail(email: string, token: string): Promise<void> {
+    const confirmationUrl = `${process.env.API_URL}/auth/confirm?token=${token}`;
+    const subject = 'Email Confirmation';
+    const bodyText = `Please confirm your email by visiting: ${confirmationUrl}`;
+
+    await this.sendEmail({
+      toAddress: email,
+      subject,
+      bodyText,
+    });
   }
 }

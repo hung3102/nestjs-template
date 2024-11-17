@@ -3,8 +3,9 @@ import { knexSnakeCaseMappers, Model } from 'objection';
 import * as Knex from 'knex';
 import { Test } from './models/test.model';
 import { User } from './models/user.model';
+import { UserAuth } from './models/userAuth.model';
 
-const models = [Test, User];
+const models = [Test, User, UserAuth];
 
 const modelProviders = models.map((model) => {
   return {

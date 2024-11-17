@@ -8,7 +8,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HealthController } from './health/health.controller';
 import { AppLoggerMiddleware } from './middleware/appLogger.middleware';
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './users/user.module';
+import { UserModule } from './user/user.module';
 import { EmailModule } from './email/email.module';
 
 @Module({
